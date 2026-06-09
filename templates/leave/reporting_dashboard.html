@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div id="dashboard-data-bridge" style="display: none;"
+     data-sick="{{ balances.sick_total|default:12 }}"
+     data-casual="{{ balances.casual_total|default:10 }}"
+     data-emergency="{{ balances.emergency_total|default:3 }}"
+     data-exam="{{ balances.exam_total|default:5 }}"
+     data-other="{{ balances.other_total|default:0 }}"
+     data-used="{{ balances.total_used|default:0 }}"
+     data-remaining="{{ balances.total_remaining|default:30 }}">
+</div>
+
+<div class="dashboard-body">
+    <div class="portal-header">
+        <h1>MANAGEMENT DASHBOARD</h1>
+    </div>
+
+    <div class="tab-navigation-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+        <button type="button" class="tab-trigger-btn active-tab" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-leave-balance')">My Balances</button>
+        <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-leave-apply')">Leave Apply</button>
+        <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-pending-reviews')">Pending ({{ pending_requests|length }})</button>
+        
+        <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-leave-history')">My History</button>
+        <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-approval-logs')">Action Logs</button>
+    </div>
+
+    {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message-alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div id="panel-leave-balance" class="dashboard-panel panel-active">
+        <div class="content-card">
+            <h2 class="card-title">My Leave Allocation & Balances Ledger</h2>
+            <div class="charts-flex-wrapper">
+                <div class="chart-box" id="allocationBox">
+                    <h4>Total Allocated Days Strategy</h4>
+                    <div class="pie-canvas-container">
+                        <div id="allocationPie" class="pie-canvas"></div>
+                        <div class="chart-tooltip" id="allocationTooltip"></div>
+                    </div>
+                    <div class="legend-list">
+                        <div class="legend-item"><div class="legend-label-group"><span class="legend-color-dot dot-sick"></span> Sick Leave</div><strong>{{ balances.sick_total }} Days</strong></div>
+                        <div class="legend-item"><div class="legend-label-group"><span class="legend-color-dot dot-casual"></span> Casual Leave</div><strong>{{ balances.casual_total }} Days</strong></div>
+                        <div class="legend-item"><div class="legend-label-group"><span class="legend-color-dot dot-emergency"></span> Emergency Leave</div><strong>{{ balances.emergency_total }} Days</strong></div>
+                        <div class="legend-item"><div class="legend-label-group"><span class="legend-color-dot dot-exam"></span> Exam Leave</div><strong>{{ balances.exam_total }} Days</strong></div>
+                        <div class="legend-item"><div class="legend-label-group"><span class="legend-color-dot dot-other"></span> Other Leave</div><strong>{{ balances.other_total }} Days</strong></div>
+                    </div>
+                </div>
+
+                <div class="chart-box" id="utilizationBox">
+                    <h4>Total Account Balance Utilization</h4>
+                    <div class="pie-canvas-container">
+                        <div id="utilizationPie" class="pie-canvas"></div>
+                        <div class="chart-tooltip" id="utilizationTooltip"></div>
+                    </div>
+                    <div class="legend-list">
+                        <div class="legend-item"><div class="legend-label-group"><span class="legend-color-dot dot-used"></span> Days Used</div><strong>{{ balances.total_used|default:0 }} Days</strong></div>
+                        <div class="legend-item"><div class="legend-label-group"><span class="legend-color-dot dot-remaining"></span> Remaining</div><strong>{{ balances.total_remaining|default:30 }} Days</strong></div>
+                        <hr class="divider">
+                        <div class="summary-item">
+                            <div>Global Allocation Summary</div>
+                            <span>{{ balances.total_allocated|default:30 }} Total</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="panel-leave-apply" class="dashboard-panel">
+        <div class="content-card">
+            <h2 class="card-title">File A New Absenteeism Leave Request</h2>
+            <form action="{% url 'apply_leave' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="grid-two-column">
+                    <div class="form-group-element">
+                        <label for="leave_type">Select Category Type *</label>
+                        <select name="leave_type" id="leave_type" required>
+                            <option value="Sick Leave">Sick Leave (Remains: {{ balances.sick_remaining|default:12}})</option>
+                            <option value="Casual Leave">Casual Leave (Remains: {{ balances.casual_remaining|default:10 }})</option>
+                            <option value="Emergency Leave">Emergency Leave (Remains: {{ balances.emergency_remaining|default:3 }})</option>
+                            <option value="Exam Leave">Exam Leave (Remains: {{ balances.exam_remaining|default:5 }})</option>
+                            <option value="Other Leave">Other Leave (Remains: {{ balances.other_remaining|default:0 }})</option>
+                        </select>
+                    </div>
+                    <div class="form-group-element">
+                        <label for="days">Calculated Business Days Count *</label>
+                        <input type="number" name="days" id="days" min="1" value="1" required>
+                    </div>
+                    <div class="form-group-element">
+                        <label for="from_date">From Timeline Horizon (Start Date) *</label>
+                        <input type="date" name="from_date" id="from_date" required>
+                    </div>
+                    <div class="form-group-element">
+                        <label for="to_date">To Timeline Horizon (End Date) *</label>
+                        <input type="date" name="to_date" id="to_date" required>
+                    </div>
+                    {% if not request.user.is_staff %}
+                    <div class="form-group-element">
+                        <label for="reporting_person">Reviewing Staff / Trainer (Optional)</label>
+                        <select name="reporting_person" id="reporting_person">
+                            <option value="">-- Optional: Select Staff/Trainer --</option>
+                            {% for staff in staff_members %}<option value="{{ staff.id }}">{{ staff.get_full_name|default:staff.username }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="form-group-element">
+                        <label for="supporting_doc">Verify Attachment Documentation (Optional)</label>
+                        <input type="file" name="supporting_doc" id="supporting_doc">
+                    </div>
+                </div>
+                <div class="form-group-element">
+                    <label for="reason">Context Reason Explanation Statement *</label>
+                    <textarea name="reason" id="reason" rows="4" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-action-btn">Commit Workspace Leave Dispatch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="panel-pending-reviews" class="dashboard-panel">
+        <div class="content-card">
+            <h2 class="card-title">Incoming Leave Pipeline Applications Awaiting Action</h2> 
+            <div class="table-responsive">
+                {% if pending_requests %}
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Type</th>
+                            <th>Timeline Horizon</th>
+                            <th>Days</th>
+                            <th>Reason Description</th>
+                            <th>Review Decisions Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in pending_requests %}
+                        <tr>
+                            <td>
+                                <strong>{{ leave.applicant.get_full_name|default:leave.applicant.username }}</strong><br>
+                                <small style="color: var(--text-muted);">@{{ leave.applicant.username }}</small>
+                            </td>
+                            <td><span class="stage-badge">{{ leave.leave_type }}</span></td>
+                            <td>{{ leave.from_date|date:"Y-m-d" }} to {{ leave.to_date|date:"Y-m-d" }}</td>
+                            <td><strong>{{ leave.days }} Days</strong></td>
+                            <td style="max-width: 250px;">{{ leave.reason }}</td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <form action="{% url 'approve_leave' leave.leave_id %}" method="POST">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-approve">Approve</button>
+                                    </form>
+                                    <button type="button" onclick="openRejectModal('{{ leave.leave_id }}')" class="btn-reject">Reject</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %} 
+                <p class="empty-state">✨No pending leave validation requests matching your profile hierarchy roles.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div id="rejectModal" class="modal-overlay">
+        <form id="rejectForm" method="POST" action="" class="modal-card">
+             {% csrf_token %}
+            <h3 style="margin-top: 0;">Rejection Reason</h3>
+        
+            <input type="text" name="reviewer_comments" class="modal-input" 
+               placeholder="Enter reason for rejection..." required>
+               
+            <div class="modal-actions">
+                <button type="button" onclick="closeRejectModal()" class="btn-cancel">Cancel</button>
+                <button type="submit" class="btn-reject">Confirm Rejection</button>
+            </div>
+         </form>
+    </div>
+
+    <div id="panel-leave-history" class="dashboard-panel">
+        <div class="content-card">
+            <h2 class="card-title">My Personal Request Submissions History Log</h2>
+            <div class="table-responsive">
+                {% if my_requests %}
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                            <th>ID</th><th>Leave Category Type</th><th>Timeline Range</th><th>Days</th><th>Reason</th><th>Current Stage</th><th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in my_requests %}
+                        <tr>
+                            <td><strong>#{{ leave.leave_id }}</strong></td>
+                            <td>{{ leave.leave_type }}</td>
+                            <td>{{ leave.from_date|date:"Y-m-d" }} to {{ leave.to_date|date:"Y-m-d" }}</td>
+                            <td>{{ leave.days }} Days</td>
+                            <td>{{ leave.reason }}</td>
+                            <td><span class="stage-badge">{{ leave.current_stage }}</span></td>
+                            <td>
+                                {% if leave.status == 'Pending' %}<span class="status-pending">Pending Review</span>
+                                {% elif leave.status == 'Approved' %}<span class="status-approved">Approved</span>
+                                {% else %}<span class="status-rejected">Rejected</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                    <p>No personal leave dispatch logs identified.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div id="panel-approval-logs" class="dashboard-panel">
+    <div class="content-card">
+        <h2 class="card-title">Audit Log of Requests Handled By Me</h2>
+        <div class="table-responsive">
+            {% if processed_history %}
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Action ID</th>
+                            <th>Leave ID</th>
+                            <th>Applicant Profile</th>
+                            <th>Decision Executed</th>
+                            <th>Processing Log Time</th>
+                            <th>Reviewer Comment Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in processed_history %}
+                            <tr>
+                                <td><strong>#{{ log.approval_id }}</strong></td>
+                                <td>#{{ log.leave.leave_id }}</td>
+                                <td>{{ log.leave.applicant.get_full_name|default:log.leave.applicant.username }}</td>
+                                <td>
+                                    {% if log.decision == 'Approved' %}
+                                        <span class="status-approved">Approved</span>
+                                    {% else %}
+                                        <span class="status-rejected">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.decided_at|date:"Y-m-d H:i" }}</td>
+                                <td style="color: var(--text-muted);"><em>"{{ log.comment }}"</em></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="empty-state">No requests evaluated or signed off by your active account yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</div> {% endblock %}
+
+
+
+  

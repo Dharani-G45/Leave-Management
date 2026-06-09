@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-body" style="max-width: 600px; margin: 40px auto;">
+    <div class="content-card">
+        <h2 class="card-title" style="margin-bottom: 25px;">Account Identity Profile</h2>
+        
+        <div class="profile-grid">
+            <div class="profile-item">
+                <label>Username</label>
+                <p>{{ user.username }}</p>
+            </div>
+            <div class="profile-item">
+                <label>Full Name</label>
+                <p>{{ user.get_full_name|default:"Not Provided" }}</p>
+            </div>
+            <div class="profile-item">
+                <label>Email Address</label>
+                <p>{{ user.email }}</p>
+            </div>
+        </div>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #edf2f7;">
+
+        {% if profile %}
+            <h4 style="margin-bottom: 15px;">Professional Details</h4>
+            <div class="profile-grid">
+                <div class="profile-item">
+                    <label>Assigned Role</label>
+                    <p><strong>{{ profile.role }}</strong></p>
+                </div>
+                <div class="profile-item">
+                    <label>Department/Branch</label>
+                    <p>{{ profile.branch_department|default:"N/A" }}</p>
+                </div>
+                {% if profile.reporting_person %}
+                <div class="profile-item">
+                    <label>Reporting Manager</label>
+                    <p>{{ profile.reporting_person.user.get_full_name }}</p>
+                </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="message-alert alert-warning">
+                <em>Note: Extended profile metrics are not configured for this account.</em>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .profile-item label { display: block; color: #718096; font-size: 0.85rem; margin-bottom: 4px; }
+    .profile-item p { margin: 0; font-weight: 500; color: #2d3748; }
+</style>
+{% endblock %}

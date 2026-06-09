@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-body" style="max-width: 650px; margin: 40px auto;">
+    <div class="content-card">
+        <h2 class="card-title" style="margin-bottom: 25px; text-align: center;">Create New Account Profile</h2>
+        
+        <form action="{% url 'register_user' %}" method="POST">
+            {% csrf_token %}
+            
+            <div class="grid-two-column">
+                <div class="form-group-element">
+                    <label for="id_username">Username *</label>
+                    <input type="text" id="id_username" name="username" placeholder="Pick a login name" autocomplete="username" required>
+                </div>
+                <div class="form-group-element">
+                    <label for="id_password">Password *</label>
+                    <input type="password" id="id_password" name="password" placeholder="Password" autocomplete="new-password" required>
+                </div>
+            </div>
+
+            <div class="grid-two-column" style="margin-top: 15px;">
+                <div class="form-group-element">
+                    <label for="id_first_name">First Name *</label>
+                    <input type="text" id="id_first_name" name="first_name" autocomplete="given-name" required>
+                </div>
+                <div class="form-group-element">
+                    <label for="id_last_name">Last Name *</label>
+                    <input type="text" id="id_last_name" name="last_name" autocomplete="family-name" required>
+                </div>
+            </div>
+
+            <div class="grid-two-column" style="margin-top: 15px;">
+                <div class="form-group-element">
+                    <label for="id_email">E-mail Address *</label>
+                    <input type="email" id="id_email" name="email" autocomplete="email" required>
+                </div>
+                <div class="form-group-element">
+                    <label for="id_branch">Branch / Department *</label>
+                    <input type="text" id="id_branch" name="branch_department" placeholder="e.g. CSE, Admin" autocomplete="organization" required>
+                </div>
+            </div>
+
+            <div class="grid-two-column" style="margin-top: 15px;">
+                <div class="form-group-element">
+                    <label for="id_role">Account Role *</label>
+                    <select id="id_role" name="role" required>
+                        <option value="STUDENT">Student</option>
+                        <option value="STAFF">Staff</option>
+                        <option value="Reporting Person">Reporting Person</option>
+                        <option value="HR">HR</option>
+                        <option value="FOUNDER">Founder</option>
+                    </select>
+                </div>
+                <div class="form-group-element">
+                    <label for="id_reporting_person">Reporting Authority Manager</label>
+                    <select name="reporting_person" class="form-control">
+                        <option value="">-- Select Reporting Person --</option>
+                         {% for manager in managers %}
+                        <option value="{{ manager.id }}">
+                        {{ manager.user.get_full_name|default:manager.user.username }} ({{ manager.role }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: right;">
+                <button type="submit" class="submit-action-btn" style="width: 100%;">Register & Provision Account</button>
+            </div>
+        </form>
+
+        <p style="margin-top: 20px; text-align: center; color: #718096; font-size: 14px;">
+            Already have an active account? <a href="{% url 'login_user' %}" style="color: #3498db; font-weight: 600; text-decoration: none;">Login here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

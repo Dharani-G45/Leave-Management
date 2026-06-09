@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-body">
+    <div class="portal-header">
+        <h1>Executive Oversight Command Center</h1>
+    </div>
+
+    <div class="tab-navigation-container"style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+        <button type="button" class="tab-trigger-btn active-tab" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-pending')">Pending Approvals</button>
+        <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-approved')">Approval History</button>
+        <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-rejected')">Rejection Logs</button>
+    </div>
+ 
+    <div id="panel-pending" class="dashboard-panel panel-active">
+        <div class="content-card">
+            <h2 class="card-title">Pending Leave Applications</h2>
+            <div class="table-responsive">
+                {% if pending_requests %}
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr >
+                                <th>Applicant</th>
+                                <th>Type</th>
+                                <th>Timeline Horizon</th>
+                                <th>Days</th>
+                                <th>Review Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in pending_requests %}
+                            <tr>
+                                <td>
+                                    <strong>{{ leave.applicant.get_full_name|default:leave.applicant.username }}</strong><br> 
+                                    <small style="color: var(--text-muted);">@{{ leave.applicant.username }}</small>
+                                </td>
+                                <td><span class="stage-badge">{{ leave.leave_type }}</span></td>
+                                <td>{{ leave.from_date|date:"Y-m-d" }} to {{ leave.to_date|date:"Y-m-d" }}</td>
+                                <td><strong>{{ leave.days }} Days</strong></td>
+                                <td> 
+                                    <div style="display: flex; gap: 8px;">
+                                        <form action="{% url 'approve_leave' leave.leave_id %}" method="POST"> 
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-approve">Approve</button>
+                                        </form> 
+                                        <button type="button" onclick="openRejectModal('{{ leave.leave_id }}')" class="btn-reject">Reject</button>
+                                    </div>
+                                </td>    
+                            </tr>   
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>✨No pending requests requiring your review.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div id="rejectModal" class="modal-overlay">
+        <form id="rejectForm" method="POST" action="" class="modal-card">
+             {% csrf_token %}
+            <h3 style="margin-top: 0;">Rejection Reason</h3>
+        
+            <input type="text" name="reviewer_comments" class="modal-input" 
+               placeholder="Enter reason for rejection..." required>
+               
+            <div class="modal-actions">
+                <button type="button" onclick="closeRejectModal()" class="btn-cancel">Cancel</button>
+                <button type="submit" class="btn-reject">Confirm Rejection</button>
+            </div>
+         </form>
+    </div>
+
+    <div id="panel-approved" class="dashboard-panel">
+        <div class="content-card">
+            <h2 class="card-title">Approval History Log</h2>
+            <div class="table-responsive">
+                {% if approval_history %}
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Action ID</th>
+                                <th>Applicant</th>
+                                <th>Decision</th>
+                                <th>Log Time</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in approval_history %}
+                            <tr>
+                                <td><strong>#{{ log.approval_id }}</strong></td>
+                                <td>{{ log.leave.applicant.get_full_name |default:log.leave.applicant.username  }}</td>
+                                <td>
+                                    {% if log.decision == 'Approved' %}
+                                        <span class="status-approved">Approved</span>
+                                    {% else %}
+                                        <span class="status-rejected">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.decided_at|date:"Y-m-d H:i" }}</td>
+                                <td  style="color: var(--text-muted);"><em>{{ log.comment|default:"-" }}</em></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="empty-state">No history found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div id="panel-rejected" class="dashboard-panel">
+        <div class="content-card">
+            <h2 class="card-title">System-wide Rejections</h2>
+            <div class="table-responsive">
+                {% if rejected_requests %}
+                <table class="dashboard-table"> 
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Type</th>
+                            <th>From Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in rejected_requests %}
+                        <tr>
+                            <td>{{ req.applicant.username }}</td>
+                            <td><span class="stage-badge">{{ req.leave_type }}</span></td>
+                            <td>{{ req.from_date|date:"Y-m-d" }}</td>
+                            <td><span class="status-rejected">Rejected</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="empty-state">No rejected requests found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-body" style="max-width: 450px; margin: 60px auto;">
+    <div class="content-card">
+        <h2 class="card-title" style="text-align: center; margin-bottom: 25px;">Login to CRM Portal</h2>
+        
+        {% if messages %}
+            <div class="messages-container" style="margin-bottom: 15px;">
+                {% for message in messages %}
+                    <div class="message-alert alert-danger" style="margin: 5px 0; padding: 10px; font-size: 14px;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'login_user' %}">
+            {% csrf_token %}
+            
+            <div class="form-group-wrapper standard-form-inputs">
+                {% for field in form %}
+                    <div class="form-group-element" style="margin-bottom: 15px;">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <small style="color: #e74c3c; display: block; margin-top: 4px;">{{ field.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <button type="submit" class="submit-action-btn" style="width: 100%; padding: 12px; margin-top: 15px; font-size: 15px;">
+                Authenticate Portal Session
+            </button>
+        </form>
+        
+        <p style="margin-top: 20px; text-align: center; color: #718096; font-size: 14px;">
+            Don't have an account? <a href="{% url 'register_user' %}" style="color: #3498db; font-weight: 600; text-decoration: none;">Register here</a>
+        </p>
+    </div>
+</div>
+
+<style>
+    .standard-form-inputs input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        font-size: 14px;
+        margin-top: 5px;
+        box-sizing: border-box;
+    }
+    .standard-form-inputs input:focus {
+        border-color: #3498db;
+        outline: none;
+    }
+</style>
+{% endblock %}
