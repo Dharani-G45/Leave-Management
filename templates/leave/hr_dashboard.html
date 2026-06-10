@@ -321,32 +321,31 @@
 </script>
 
 <script>
-    var calendar;
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    var eventsData = JSON.parse(document.getElementById('calendar-data-json').textContent);
+    // 1. THIS FUNCTION MUST RUN REGARDLESS OF OTHER ERRORS
+    function switchDashboardPanel(btn, panelId) {
+        document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.remove('panel-active'));
+        document.querySelectorAll('.tab-trigger-btn').forEach(b => b.classList.remove('active-tab'));
+        document.getElementById(panelId).classList.add('panel-active');
+        btn.classList.add('active-tab');
+    }
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        events: eventsData,
-        eventDisplay: 'none', 
-        dayCellDidMount: function(info) {
-            let dateStr = info.dateStr;
-            let dayEvents = eventsData.filter(e => dateStr >= e.start && dateStr < e.end);
-            
-            if (dayEvents.length > 0) {
-                let badge = document.createElement('div');
-                badge.style.cssText = "background:#2c3e50; color:white; border-radius:10px; padding:2px 6px; font-size:10px; margin:2px auto; width:fit-content; cursor:help;";
-                badge.innerText = dayEvents.length + " entries";
-                badge.title = dayEvents.map(e => e.title + " (" + e.type + ")").join(', ');
-                info.el.appendChild(badge);
+    // 2. CALENDAR LOGIC IS NOW FULLY ISOLATED
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            var calendarEl = document.getElementById('calendar');
+            if (calendarEl) {
+                var eventsData = JSON.parse(document.getElementById('calendar-data-json').textContent);
+                var calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    events: eventsData
+                });
+                calendar.render();
             }
+        } catch (err) {
+            console.warn("Calendar skipped due to error:", err);
+            // The dashboard tabs will continue to work even if this fails!
         }
-    
-
     });
-    calendar.render();
-});
 </script>
 
 {% endblock %}

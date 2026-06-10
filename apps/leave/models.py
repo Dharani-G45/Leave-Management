@@ -32,14 +32,14 @@ class LeaveRequest(models.Model):
     leave_id = models.AutoField(primary_key=True)    
 
     applicant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leave_requests')
-    applicant_type = models.CharField(max_length=10, choices=APPLICANT_CHOICES)
+    applicant_type = models.CharField(max_length=50, choices=APPLICANT_CHOICES)
     department = models.CharField(max_length=100, blank=True, null=True, default="Computer Science")
 
     leave_type = models.CharField(max_length=50, choices=LEAVE_TYPE_CHOICES)
     from_date = models.DateField()
     to_date = models.DateField()
     days = models.IntegerField()
-    reason = models.TextField()
+    reason = models.TextField(max_length=300)
     doc_path = models.FileField(upload_to='leave_documents/', blank=True, null=True)
 
     reporting_person = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_reviews')
@@ -59,7 +59,7 @@ class LeaveApproval(models.Model):
     approver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='given_approvals')
     approver_role = models.CharField(max_length=50) 
     decision = models.CharField(max_length=15, choices=[('Approved', 'Approved'), ('Rejected', 'Rejected')])
-    comment = models.TextField(blank=True, null=True)
+    comment = models.TextField(max_length=300, blank=True, null=True)
     decided_at = models.DateTimeField(auto_now=True)
 
 class LeaveBalance(models.Model):

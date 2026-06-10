@@ -85,9 +85,9 @@ WSGI_APPLICATION = 'csc_crm.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
+        env='DATABASE_URL',
         conn_max_age=600,
-       ssl_require=True
+        ssl_require=True
     )
 }
 
