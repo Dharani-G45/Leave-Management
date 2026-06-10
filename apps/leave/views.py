@@ -193,6 +193,7 @@ def reporting_dashboard(request):
         'processed_history': LeaveApproval.objects.filter(approver=request.user).order_by('-approval_id')
     })
 
+@login_required
 def hr_dashboard(request):
     if request.user.profile.role.lower() != 'hr':
         return redirect('dashboard')
