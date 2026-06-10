@@ -76,20 +76,20 @@ WSGI_APPLICATION = 'csc_crm.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-#DATABASES = {
-#    'default': {
-#       'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-#}
-
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
-    )
+    'default': {
+       'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
+
+#DATABASES = {
+#    'default': dj_database_url.config(
+#        default=os.environ.get('DATABASE_URL'),
+#        conn_max_age=600,
+#       ssl_require=True
+#    )
+#}
 
 
 # Password validation
@@ -146,18 +146,24 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # settings.py
 
+# Email Backend Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_PORT = 2525
-EMAIL_HOST_USER = '04fa4ff93fc377' # Use the Username from your screen
-EMAIL_HOST_PASSWORD = '8009334588d3bd' # Click the 'eye' icon on your screen to see your real password
-EMAIL_USE_TLS = True
 
-# Default sender profile setting
-DEFAULT_FROM_EMAIL = f"CRM Leave Portal <{EMAIL_HOST_USER}>"
+# Replace these with your provider's SMTP details
+EMAIL_HOST = 'smtp.your-provider.com' 
+EMAIL_PORT = 587  # Common port for TLS
+EMAIL_HOST_USER = 'errors2experts.official@gmail.com'
+EMAIL_HOST_PASSWORD = 'fhmrauciadxmutcl '
+EMAIL_USE_TLS = True 
+
+# Best Practice: Remove the session setting you added for testing
+SESSION_SAVE_EVERY_REQUEST = False 
+
+# Ensure the sender email is a valid address
+DEFAULT_FROM_EMAIL = "CRM Leave Portal <errors2experts.official@gmail.com>"
 
 # Session settings
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 1209600  # 2 weeks
-SESSION_SAVE_EVERY_REQUEST = True # Force session save on every hit to test if it fixes the logout
-SESSION_COOKIE_HTTPONLY = True
+#SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+#SESSION_COOKIE_AGE = 1209600  # 2 weeks
+#SESSION_SAVE_EVERY_REQUEST = True # Force session save on every hit to test if it fixes the logout
+#SESSION_COOKIE_HTTPONLY = True
