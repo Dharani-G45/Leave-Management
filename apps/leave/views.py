@@ -333,6 +333,7 @@ def approve_leave(request, leave_id):
             leave.reporting_person = User.objects.filter(profile__role__iexact='Founder').first()
         
     leave.save()
+    send_leave_email(leave.applicant.email, "Leave Approved", leave)
 
     deduct_leave_balance(leave)
               
