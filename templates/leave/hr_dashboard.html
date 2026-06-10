@@ -22,7 +22,7 @@
         <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-leave-apply')">Leave Apply</button>
         <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-pending-reviews')">Pending ({{ pending_requests|length }})</button>
         
-        <button type="button" class="tab-trigger-btn"  style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-calendar')">Calendar</button>
+        <!-- <button type="button" class="tab-trigger-btn"  style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-calendar')">Calendar</button> -->
         <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-leave-history')">My History</button>
         <button type="button" class="tab-trigger-btn" style="flex: 0 1 280px;" onclick="switchDashboardPanel(this, 'panel-approval-logs')">Action Logs</button>
     </div>
@@ -191,7 +191,7 @@
          </form>
     </div>
 
-    <div id="panel-calendar" class="dashboard-panel">
+    <!-- <div id="panel-calendar" class="dashboard-panel">
     <div class="content-card">
         <h2 class="card-title">Company Calendar</h2>
         
@@ -232,7 +232,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> -->
 
     <div id="panel-leave-history" class="dashboard-panel">
         <div class="content-card">
@@ -313,7 +313,7 @@
     </div>
 </div>
 
-<link rel="stylesheet" href="{% static 'css/fullcalendar.min.css' %}">
+<!-- <link rel="stylesheet" href="{% static 'css/fullcalendar.min.css' %}">
 <script src="{% static 'js/fullcalendar.min.js' %}"></script>
 
 <script id="calendar-data-json" type="application/json">
@@ -333,6 +333,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         try {
             var calendarEl = document.getElementById('calendar');
+            console.log(calendarEl)
             if (calendarEl) {
                 var eventsData = JSON.parse(document.getElementById('calendar-data-json').textContent);
                 var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -346,6 +347,6 @@
             // The dashboard tabs will continue to work even if this fails!
         }
     });
-</script>
+</script> -->
 
 {% endblock %}

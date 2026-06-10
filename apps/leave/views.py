@@ -13,7 +13,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
-from .models import LeaveRequest, LeaveApproval, LeaveBalance, HolidayCalendar
+from .models import LeaveRequest, LeaveApproval, LeaveBalance 
 
 
 # --- HELPER FUNCTIONS ---
@@ -199,15 +199,15 @@ def hr_dashboard(request):
     
     events = []
     
-    for h in HolidayCalendar.objects.filter(end_date__gte=timezone.now().date()):
-        events.append({
-            'title': h.title,
-            'start': h.start_date.strftime('%Y-%m-%d'),
-            'end': (h.end_date + timezone.timedelta(days=1)).strftime('%Y-%m-%d'),
-            'backgroundColor': '#e74c3c' if h.holiday_type == 'Government' else '#2ecc71',
-            'allDay': True,
-            'type': h.get_holiday_type_display()
-        })
+    # for h in HolidayCalendar.objects.filter(end_date__gte=timezone.now().date()):
+    #     events.append({
+    #         'title': h.title,
+    #         'start': h.start_date.strftime('%Y-%m-%d'),
+    #         'end': (h.end_date + timezone.timedelta(days=1)).strftime('%Y-%m-%d'),
+    #         'backgroundColor': '#e74c3c' if h.holiday_type == 'Government' else '#2ecc71',
+    #         'allDay': True,
+    #         'type': h.get_holiday_type_display()
+    #     })
     for l in LeaveRequest.objects.filter(status='Approved'):
         events.append({
             'title': l.applicant.username,
@@ -219,7 +219,7 @@ def hr_dashboard(request):
         })
     
     context = {
-        'calendar_events_json': json.dumps(events),
+        #'calendar_events_json': json.dumps(events),
         'my_requests': LeaveRequest.objects.filter(applicant=request.user),
         'pending_requests': LeaveRequest.objects.filter(status='Pending'),
         'processed_history': LeaveApproval.objects.all().order_by('-approval_id'),

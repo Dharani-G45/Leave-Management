@@ -2,6 +2,7 @@
  * Global Dashboard Utilities
  */
 document.addEventListener("DOMContentLoaded", function() {
+
     // 1. Panel Switching Logic
     window.switchDashboardPanel = function(clickedButton, targetPanelId) {
         document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.remove('panel-active'));

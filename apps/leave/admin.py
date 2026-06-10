@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import LeaveRequest, LeaveApproval, LeaveBalance, HolidayCalendar
+from .models import LeaveRequest, LeaveApproval, LeaveBalance
 
 @admin.register(LeaveRequest)
 class LeaveRequestAdmin(admin.ModelAdmin):
@@ -54,9 +54,9 @@ class LeaveBalanceAdmin(admin.ModelAdmin):
     list_filter = ('year',)
     search_fields = ('staff_id__username',)
 
-@admin.register(HolidayCalendar)
-class HolidayCalendarAdmin(admin.ModelAdmin):
-    """Allows Superadmins and HR to seeds institutional & government dates"""
-    list_display = ('title', 'holiday_type', 'start_date', 'end_date')
-    list_filter = ('holiday_type', 'start_date')
-    search_fields = ('title', 'description')
+# @admin.register(HolidayCalendar)
+# class HolidayCalendarAdmin(admin.ModelAdmin):
+#     """Allows Superadmins and HR to seeds institutional & government dates"""
+#     list_display = ('title', 'holiday_type', 'start_date', 'end_date')
+#     list_filter = ('holiday_type', 'start_date')
+#     search_fields = ('title', 'description')

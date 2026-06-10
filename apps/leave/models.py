@@ -90,20 +90,20 @@ class LeaveBalance(models.Model):
     def dynamic_remaining_balance(self):
         return self.dynamic_total_allocated - self.dynamic_total_used
     
-class HolidayCalendar(models.Model):
-    HOLIDAY_TYPES = [
-        ('Government', 'Government Holiday'),
-        ('Semester', 'Semester Holiday'),
-        ('Institution', 'Institution Closure'),
-        ('Exam_Break', 'Exam Preparation Break'),
-    ]
+# class HolidayCalendar(models.Model):
+#     HOLIDAY_TYPES = [
+#         ('Government', 'Government Holiday'),
+#         ('Semester', 'Semester Holiday'),
+#         ('Institution', 'Institution Closure'),
+#         ('Exam_Break', 'Exam Preparation Break'),
+#     ]
 
-    holiday_id = models.AutoField(primary_key=True)
-    title = models.CharField(max_length=150)  # e.g., "Diwali", "Summer Vacation"
-    holiday_type = models.CharField(max_length=30, choices=HOLIDAY_TYPES)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    description = models.TextField(blank=True, null=True)
+#     holiday_id = models.AutoField(primary_key=True)
+#     title = models.CharField(max_length=150)  # e.g., "Diwali", "Summer Vacation"
+#     holiday_type = models.CharField(max_length=30, choices=HOLIDAY_TYPES)
+#     start_date = models.DateField()
+#     end_date = models.DateField()
+#     description = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        return f"{self.title} ({self.get_holiday_type_display()})"    
+#     def __str__(self):
+#         return f"{self.title} ({self.get_holiday_type_display()})"    
