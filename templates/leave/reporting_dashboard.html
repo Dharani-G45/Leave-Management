@@ -78,22 +78,25 @@
     <div id="panel-leave-apply" class="dashboard-panel">
         <div class="content-card">
             <h2 class="card-title">File A New Absenteeism Leave Request</h2>
-            <form action="{% url 'apply_leave' %}" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
+            <form id="leaveApplicationForm" data-url="{% url 'apply_leave' %}" onsubmit="handleLeaveAction(event, this.dataset.url, new FormData(this))" method="POST">          
                 <div class="grid-two-column">
                     <div class="form-group-element">
                         <label for="leave_type">Select Category Type *</label>
                         <select name="leave_type" id="leave_type" required>
-                            <option value="Sick Leave">Sick Leave (Remains: {{ balances.sick_remaining|default:12}})</option>
-                            <option value="Casual Leave">Casual Leave (Remains: {{ balances.casual_remaining|default:10 }})</option>
-                            <option value="Emergency Leave">Emergency Leave (Remains: {{ balances.emergency_remaining|default:3 }})</option>
-                            <option value="Exam Leave">Exam Leave (Remains: {{ balances.exam_remaining|default:5 }})</option>
-                            <option value="Other Leave">Other Leave (Remains: {{ balances.other_remaining|default:0 }})</option>
+                            <option value="Sick Leave" data-remaining="{{ balances.sick_remaining|default:12 }}">Sick Leave (Remains: {{ balances.sick_remaining|default:12}})</option>
+                            <option value="Casual Leave" data-remaining="{{ balances.casual_remaining|default:10 }}">Casual Leave (Remains: {{ balances.casual_remaining|default:10 }})</option>
+                            <option value="Emergency Leave" data-remaining="{{ balances.emergency_remaining|default:3 }}">Emergency Leave (Remains: {{ balances.emergency_remaining|default:3 }})</option>
+                            <option value="Exam Leave" data-remaining="{{ balances.exam_remaining|default:5 }}">Exam Leave (Remains: {{ balances.exam_remaining|default:5 }})</option>
+                            <option value="Other Leave" data-remaining="{{ balances.other_remaining|default:0 }}">Other Leave (Remains: {{ balances.other_remaining|default:0 }})</option>
                         </select>
                     </div>
+
                     <div class="form-group-element">
-                        <label for="days">Calculated Business Days Count *</label>
-                        <input type="number" name="days" id="days" min="1" value="1" required>
+                        <label for="days">Calculated Days</label>
+                        <input type="hidden" name="days" id="days" value="1">
+                        <div class="days-display-container">
+                            <span id="days_display">1</span>
+                        </div>
                     </div>
                     <div class="form-group-element">
                         <label for="from_date">From Timeline Horizon (Start Date) *</label>
@@ -103,18 +106,14 @@
                         <label for="to_date">To Timeline Horizon (End Date) *</label>
                         <input type="date" name="to_date" id="to_date" required>
                     </div>
-                    {% if not request.user.is_staff %}
-                    <div class="form-group-element">
-                        <label for="reporting_person">Reviewing Staff / Trainer (Optional)</label>
-                        <select name="reporting_person" id="reporting_person">
-                            <option value="">-- Optional: Select Staff/Trainer --</option>
-                            {% for staff in staff_members %}<option value="{{ staff.id }}">{{ staff.get_full_name|default:staff.username }}</option>{% endfor %}
-                        </select>
+                    <div id="leave-history-bridge" 
+                        style="display: none;" 
+                        data-dates="{% for leave in my_requests %}{{ leave.from_date|date:'Y-m-d' }},{{ leave.to_date|date:'Y-m-d' }}{% if not forloop.last %},{% endif %}{% endfor %}">
                     </div>
-                    {% endif %}
                     <div class="form-group-element">
                         <label for="supporting_doc">Verify Attachment Documentation (Optional)</label>
                         <input type="file" name="supporting_doc" id="supporting_doc">
+                        <span id="file_name_display" class="file-name-display"></span>
                     </div>
                 </div>
                 <div class="form-group-element">
@@ -157,10 +156,7 @@
                             <td style="max-width: 250px;">{{ leave.reason }}</td>
                             <td>
                                 <div style="display: flex; gap: 8px;">
-                                    <form action="{% url 'approve_leave' leave.leave_id %}" method="POST">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn-approve">Approve</button>
-                                    </form>
+                                    <button type="button" class="btn-approve" data-url="{% url 'approve_leave' leave.leave_id %}" onclick="handleLeaveAction(event, this.dataset.url, null, refreshDashboardSection)">Approve</button>
                                     <button type="button" onclick="openRejectModal('{{ leave.leave_id }}')" class="btn-reject">Reject</button>
                                 </div>
                             </td>
@@ -175,19 +171,16 @@
         </div>
     </div>
 
-    <div id="rejectModal" class="modal-overlay">
-        <form id="rejectForm" method="POST" action="" class="modal-card">
-             {% csrf_token %}
+     <div id="rejectModal" class="modal-overlay">
+        <form id="rejectForm" class="modal-card" onsubmit="handleReject(event, null, refreshDashboardSection)">
+            {% csrf_token %}
             <h3 style="margin-top: 0;">Rejection Reason</h3>
-        
-            <input type="text" name="reviewer_comments" class="modal-input" 
-               placeholder="Enter reason for rejection..." required>
-               
+            <input type="text" name="reviewer_comments" class="modal-input" placeholder="Enter reason..." required>
             <div class="modal-actions">
                 <button type="button" onclick="closeRejectModal()" class="btn-cancel">Cancel</button>
                 <button type="submit" class="btn-reject">Confirm Rejection</button>
             </div>
-         </form>
+        </form>
     </div>
 
     <div id="panel-leave-history" class="dashboard-panel">
@@ -195,7 +188,7 @@
             <h2 class="card-title">My Personal Request Submissions History Log</h2>
             <div class="table-responsive">
                 {% if my_requests %}
-                    <table class="styled-table">
+                    <table class="styled-table" id="leave-history-table">
                         <thead>
                             <tr>
                             <th>ID</th><th>Leave Category Type</th><th>Timeline Range</th><th>Days</th><th>Reason</th><th>Current Stage</th><th>Status</th>

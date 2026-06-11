@@ -40,10 +40,7 @@
                                 <td><strong>{{ leave.days }} Days</strong></td>
                                 <td> 
                                     <div style="display: flex; gap: 8px;">
-                                        <form action="{% url 'approve_leave' leave.leave_id %}" method="POST"> 
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn-approve">Approve</button>
-                                        </form> 
+                                        <button type="button" class="btn-approve" data-url="{% url 'approve_leave' leave.leave_id %}" onclick="handleLeaveAction(event, this.dataset.url, null, refreshDashboardSection)">Approve</button>
                                         <button type="button" onclick="openRejectModal('{{ leave.leave_id }}')" class="btn-reject">Reject</button>
                                     </div>
                                 </td>    
@@ -58,20 +55,18 @@
         </div>
     </div>
 
-    <div id="rejectModal" class="modal-overlay">
-        <form id="rejectForm" method="POST" action="" class="modal-card">
-             {% csrf_token %}
+     <div id="rejectModal" class="modal-overlay">
+        <form id="rejectForm" class="modal-card" onsubmit="handleReject(event, null, refreshDashboardSection)">
+            {% csrf_token %}
             <h3 style="margin-top: 0;">Rejection Reason</h3>
-        
-            <input type="text" name="reviewer_comments" class="modal-input" 
-               placeholder="Enter reason for rejection..." required>
-               
+            <input type="text" name="reviewer_comments" class="modal-input" placeholder="Enter reason..." required>
             <div class="modal-actions">
                 <button type="button" onclick="closeRejectModal()" class="btn-cancel">Cancel</button>
                 <button type="submit" class="btn-reject">Confirm Rejection</button>
             </div>
-         </form>
+        </form>
     </div>
+
 
     <div id="panel-approved" class="dashboard-panel">
         <div class="content-card">

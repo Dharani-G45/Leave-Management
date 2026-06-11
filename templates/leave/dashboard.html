@@ -75,22 +75,25 @@
     <div id="panel-leave-apply" class="dashboard-panel">
         <div class="content-card">
             <h2 class="card-title">File A New Absenteeism Leave Request</h2>
-            <form action="{% url 'apply_leave' %}" method="POST">
+            <form id="leaveApplicationForm" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="grid-two-column">
                     <div class="form-group-element">
                         <label for="leave_type">Select Category Type *</label>
                         <select name="leave_type" id="leave_type" required>
-                            <option value="Sick Leave">Sick Leave (Remains: {{ balances.sick_remaining|default:12}})</option>
-                            <option value="Casual Leave">Casual Leave (Remains: {{ balances.casual_remaining|default:10 }})</option>
-                            <option value="Emergency Leave">Emergency Leave (Remains: {{ balances.emergency_remaining|default:3 }})</option>
-                            <option value="Exam Leave">Exam Leave (Remains: {{ balances.exam_remaining|default:5 }})</option>
-                            <option value="Other Leave">Other Leave (Remains: {{ balances.other_remaining|default:0 }})</option>
+                            <option value="Sick Leave" data-remaining="{{ balances.sick_remaining|default:12 }}">Sick Leave (Remains: {{ balances.sick_remaining|default:12}})</option>
+                            <option value="Casual Leave" data-remaining="{{ balances.casual_remaining|default:10 }}">Casual Leave (Remains: {{ balances.casual_remaining|default:10 }})</option>
+                            <option value="Emergency Leave" data-remaining="{{ balances.emergency_remaining|default:3 }}">Emergency Leave (Remains: {{ balances.emergency_remaining|default:3 }})</option>
+                            <option value="Exam Leave" data-remaining="{{ balances.exam_remaining|default:5 }}">Exam Leave (Remains: {{ balances.exam_remaining|default:5 }})</option>
+                            <option value="Other Leave" data-remaining="{{ balances.other_remaining|default:0 }}">Other Leave (Remains: {{ balances.other_remaining|default:0 }})</option>
                         </select>
                     </div>
                     <div class="form-group-element">
-                        <label for="days">Calculated Business Days Count *</label>
-                        <input type="number" name="days" id="days" min="1" value="1" required>
+                        <label for="days">Calculated Days</label>
+                        <input type="hidden" name="days" id="days" value="1">
+                        <div class="days-display-container">
+                            <span id="days_display">1</span>
+                        </div>
                     </div>
                     <div class="form-group-element">
                         <label for="from_date">From Timeline Horizon (Start Date) *</label>
@@ -100,29 +103,41 @@
                         <label for="to_date">To Timeline Horizon (End Date) *</label>
                         <input type="date" name="to_date" id="to_date" required>
                     </div>
+                    <div id="leave-history-bridge" 
+                        style="display: none;" 
+                        data-dates="{% for leave in my_requests %}{{ leave.from_date|date:'Y-m-d' }},{{ leave.to_date|date:'Y-m-d' }}{% if not forloop.last %},{% endif %}{% endfor %}">
+                    </div>
+
                     {% if not request.user.is_staff %}
                     <div class="form-group-element">
                         <label for="reporting_person">Reviewing Staff / Trainer (Optional)</label>
                         <select name="reporting_person" id="reporting_person">
                             <option value="">-- Optional: Select Staff/Trainer --</option>
-                            {% for staff in staff_members %}<option value="{{ staff.id }}">{{ staff.get_full_name|default:staff.username }}</option>{% endfor %}
+                            {% for staff in staff_members %}
+                            <option value="{{ staff.id }}">
+                                DEBUG: {{ staff.user.username }} - Role: {{ staff.role }}
+                                {{ staff.user.get_full_name|default:staff.user.username }} 
+                                {% if staff.role %}({{ staff.role }}){% endif %}
+                            </option>
+                            {% endfor %}
                         </select>
                     </div>
-                    {% endif %}
                     <div class="form-group-element">
                         <label for="supporting_doc">Verify Attachment Documentation (Optional)</label>
                         <input type="file" name="supporting_doc" id="supporting_doc">
+                        <span id="file_name_display" class="file-name-display"></span>
                     </div>
-                </div>
+                </div>    
+
                 <div class="form-group-element">
                     <label for="reason">Context Reason Explanation Statement *</label>
-                    <textarea name="reason" id="reason" rows="4" required></textarea>
+                    <textarea name="reason" id="reason" rows="4" required></textarea> 
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="submit-action-btn">Commit Workspace Leave Dispatch</button>
+                    <button type="submit" class="submit-action-btn" data-url="{% url 'apply_leave' %}" onclick="handleLeaveAction(event, this.dataset.url, new FormData(document.getElementById('leaveApplicationForm')))">Commit Workspace Leave Dispatch</button>
                 </div>
-                </form>
-        </div>
+            </form>
+        </div>    
     </div>
 
     <div id="panel-leave-history" class="dashboard-panel">
@@ -161,4 +176,5 @@
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}

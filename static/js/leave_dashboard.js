@@ -92,33 +92,108 @@ document.addEventListener("DOMContentLoaded", function() {
         ]);
     }
 
-    // 3. Date Calculation Logic
+    //Date calculation
     const fromDateInput = document.getElementById("from_date");
     const toDateInput = document.getElementById("to_date");
     const daysInput = document.getElementById("days");
+    const daysDisplay = document.getElementById("days_display");
 
-    function calculateDays() {
+    function calculateTotalDays() {
         if (!fromDateInput.value || !toDateInput.value) return;
-        const fromDate = new Date(fromDateInput.value);
-        const toDate = new Date(toDateInput.value);
         
-        if (toDate >= fromDate) {
-            const diffDays = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+        const start = new Date(fromDateInput.value);
+        const end = new Date(toDateInput.value);
+        
+        if (end >= start) {
+            // Difference in days + 1 to make it inclusive
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
             daysInput.value = diffDays;
+            daysDisplay.textContent = diffDays;
         } else {
             daysInput.value = 0;
+            daysDisplay.textContent = 0;
         }
     }
 
     if (fromDateInput && toDateInput) {
-        fromDateInput.addEventListener("change", calculateDays);
-        toDateInput.addEventListener("change", calculateDays);
+        fromDateInput.addEventListener("change", calculateTotalDays);
+        toDateInput.addEventListener("change", calculateTotalDays);
     }
+
+    document.querySelectorAll('.form-group-element').forEach(group => {
+        const input = group.querySelector('input[type="date"]');
+        if (input) {
+            group.addEventListener('click', () => {
+                input.showPicker ? input.showPicker() : input.focus();
+            });
+        }
+    });
+
+    // 2. Prevent duplicate dates (Now reads from the data bridge)
+    const historyBridge = document.getElementById('leave-history-bridge');
+    if (historyBridge && historyBridge.dataset.dates) {
+        const takenDates = historyBridge.dataset.dates.split(',');
+        
+        const dateInputs = ['from_date', 'to_date'];
+        dateInputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('change', function() {
+                    if (takenDates.includes(this.value)) {
+                        alert('Warning: You have already taken leave on this date.');
+                        this.value = ''; // Clear the input
+                    }
+                });
+            }
+        });
+    } 
+    
+    const fileInput = document.getElementById('supporting_doc');
+    const fileNameDisplay = document.getElementById('file_name_display');
+    
+    let dataTransfer = new DataTransfer();
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                dataTransfer.items.clear();
+                dataTransfer.items.add(this.files[0]);
+                fileNameDisplay.textContent = "Selected: " + this.files[0].name;
+            } 
+            else {
+                if (dataTransfer.files.length > 0) {
+                    this.files = dataTransfer.files;
+                }
+            }
+        });
+    }
+    document.getElementById('leaveApplicationForm').addEventListener('submit', function(event) {
+    const select = document.getElementById('leave_type');
+    const selectedOption = select.options[select.selectedIndex];
+    const remaining = parseInt(selectedOption.getAttribute('data-remaining'));
+    const daysRequested = parseInt(document.getElementById('days').value);
+
+    // Check if remaining balance is 0 or if requested days exceed balance
+    if (remaining <= 0) {
+        event.preventDefault(); // Stop form submission
+        alert("You have no remaining balance for this leave category.");
+        return false;
+    }
+    
+    if (daysRequested > remaining) {
+        event.preventDefault();
+        alert("You requested " + daysRequested + " days, but only " + remaining + " are available.");
+        return false;
+    }
+    });
 });
 
 /**
  * Rejection Modal Controls
  */
+
 window.openRejectModal = function(leaveId) {
     const modal = document.getElementById('rejectModal');
     document.getElementById('rejectForm').action = `/reject/${leaveId}/`;
@@ -128,3 +203,86 @@ window.openRejectModal = function(leaveId) {
 window.closeRejectModal = function() {
     document.getElementById('rejectModal').style.display = 'none';
 };
+
+// --- CSRF Helper ---
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// --- Global Popup System ---
+function showGlobalPopup(message) {
+    const popup = document.createElement('div');
+    popup.className = 'global-toast-popup';
+    popup.innerText = message;
+    document.body.appendChild(popup);
+    setTimeout(() => popup.remove(), 3000);
+}
+
+
+async function handleLeaveAction(event, url, formData = null, onSuccessCallback = null) {
+    if (event) event.preventDefault();
+    
+    // Prepare fetch options
+    const fetchOptions = {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    };
+
+    // Only add body if formData exists
+    if (formData) {
+        fetchOptions.body = formData;
+    }
+    
+    try {
+        const response = await fetch(url, fetchOptions);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            showGlobalPopup(data.message);
+            if (onSuccessCallback) onSuccessCallback();
+        } else {
+            showGlobalPopup(data.message || "Operation failed.");
+        }
+    } catch (e) {
+        showGlobalPopup("Network error. Please try again.");
+    }
+}
+async function refreshDashboardSection() {
+    try {
+        const response = await fetch(window.location.href);
+        const htmlText = await response.text();
+        const parser = new DOMParser();
+        const newDoc = parser.parseFromString(htmlText, 'text/html');
+
+        // IDs of the containers that need to be refreshed
+        const panelsToRefresh = [
+            'panel-leave-balance', 
+            'panel-pending-reviews', 
+            'panel-leave-history', 
+            'panel-approval-logs'
+        ];
+
+        panelsToRefresh.forEach(id => {
+            const oldPanel = document.getElementById(id);
+            const newPanel = newDoc.getElementById(id);
+            if (oldPanel && newPanel) {
+                oldPanel.innerHTML = newPanel.innerHTML;
+            }
+        });
+        
+        console.log("Dashboard refreshed successfully.");
+    } catch (error) {
+        console.error("Error refreshing dashboard:", error);
+    }
+}

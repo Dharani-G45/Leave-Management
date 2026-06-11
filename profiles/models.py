@@ -16,7 +16,7 @@ class Profile(models.Model):
     email = models.EmailField(max_length=254)
     branch_department = models.CharField(max_length=100, verbose_name="Branch/Dept")
     image = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
-
+    
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     dob = models.DateField(blank=True, null=True, verbose_name="Date of Birth")
 

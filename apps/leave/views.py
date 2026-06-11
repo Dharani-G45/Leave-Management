@@ -1,5 +1,5 @@
 import random
-import json
+import os
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login as auth_login, logout as auth_logout, authenticate
@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from .models import LeaveRequest, LeaveApproval, LeaveBalance 
 
-
+print(f"DEBUG: EMAIL_HOST_PASSWORD is: {os.environ.get('EMAIL_HOST_PASSWORD')}")
 # --- HELPER FUNCTIONS ---
 def get_balances(user):
     balance_record = LeaveBalance.objects.filter(staff_id=user).first()
@@ -76,6 +76,16 @@ def send_leave_email(recipient_email, subject, leave_request):
     )
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [recipient_email], fail_silently=False)
     
+def get_user_remaining_days(user, leave_type):
+    total_allocated = getattr(user.profile, f"{leave_type.lower().replace(' ', '_')}_total", 0)
+     
+    used_days = LeaveRequest.objects.filter(
+        applicant=user, 
+        leave_type=leave_type, 
+        status='Approved'
+    ).aggregate(total=Sum('days'))['total'] or 0
+    
+    return total_allocated - used_days
 
 def deduct_leave_balance(leave):
     balance = LeaveBalance.objects.filter(staff_id=leave.applicant).first()
@@ -116,11 +126,13 @@ def register_user(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         role = request.POST.get('role', 'STUDENT')
+        email = request.POST.get('email')
         reporting_person_id = request.POST.get('reporting_person') 
         
         user = User.objects.create_user(
             username=username, 
             password=request.POST.get('password'), 
+            email=email,
             first_name=request.POST.get('first_name'), 
             last_name=request.POST.get('last_name')
         )
@@ -132,6 +144,7 @@ def register_user(request):
             user=user, 
             role=role, 
             id_number=f"CSC-{role}-{random.randint(1000,9999)}", 
+            email=email,
             branch_department=request.POST.get('branch_department'),
             reporting_person=reporting_profile
         )
@@ -247,6 +260,19 @@ def founder_dashboard(request):
 def apply_leave(request):
     if request.method == 'POST':
         user = request.user
+        leave_type = request.POST.get('leave_type')
+        requested_days = int(request.POST.get('days', 0))
+
+        # 1. BALANCE CHECK LOGIC
+        # Assuming you have a way to calculate remaining days (e.g., from your profile or a helper)
+        # Replace 'get_user_remaining_days' with your specific model logic
+        remaining_days = get_user_remaining_days(user, leave_type) 
+
+        if requested_days > remaining_days:
+            return JsonResponse({
+                'status': 'error', 
+                'message': f'Insufficient balance! You requested {requested_days} days, but only {remaining_days} are available.'
+            }, status=400)
         role = user.profile.role.lower().replace(' ', '_')
         
         if role == 'student':
@@ -271,6 +297,7 @@ def apply_leave(request):
         if not reviewer:
             reviewer = User.objects.filter(profile__role__iexact='HR').first()
             stage = 'HR_Review'
+ 
 
         leave = LeaveRequest.objects.create(
             applicant=user, 
@@ -288,7 +315,6 @@ def apply_leave(request):
         else:
             print(f"No reviewer found for role {role}. Leave ID: {leave.leave_id}")
             
-        messages.success(request, "Leave request submitted.")
        
         dashboard_map = {
             'student': 'dashboard',
@@ -298,7 +324,8 @@ def apply_leave(request):
             'founder': 'founder_dashboard'
         }
         role = request.user.profile.role.lower().replace(' ', '_')
-        return redirect(dashboard_map.get(role, 'dashboard'))
+        return JsonResponse({'status': 'success', 'message': 'Request submitted successfully!'})
+    return JsonResponse({'status': 'error'}, status=400)
 
 @login_required
 def approve_leave(request, leave_id):
@@ -334,9 +361,13 @@ def approve_leave(request, leave_id):
             leave.reporting_person = User.objects.filter(profile__role__iexact='Founder').first()
         
     leave.save()
-    send_leave_email(leave.applicant.email, "Leave Approved", leave)
 
-    deduct_leave_balance(leave)
+    try:
+        send_leave_email(leave.applicant.email, "Leave Approved", leave)
+        print("DEBUG: Approval email sent successfully")
+    except Exception as e:
+        print(f"DEBUG: Email sending FAILED: {e}")
+
               
     LeaveApproval.objects.create(
         leave=leave, 
@@ -344,7 +375,7 @@ def approve_leave(request, leave_id):
         decision='Approved', 
         comment="Approved"
     )
-    return redirect(get_dashboard_url(request.user)) 
+    return JsonResponse({'status': 'success', 'message': 'Approved'})
 
 @login_required
 def reject_leave(request, leave_id):
@@ -372,5 +403,4 @@ def reject_leave(request, leave_id):
     
     send_leave_email(leave.applicant.email, "Leave Rejected", leave)
     
-    messages.success(request, "Request successfully rejected.")
-    return redirect('dashboard')
+    return JsonResponse({'status': 'success', 'message': 'Rejected'})
