@@ -309,11 +309,102 @@ td { padding: 12px; border-bottom: 1px solid #edf2f7; }
     animation: slideIn 0.3s ease-out;
 }
 
+
+
+
+/* --- Mobile View & Responsiveness --- */
+@media (max-width: 768px) {
+    .dashboard-body { padding: 10px; }
+    
+    .portal-header { margin-bottom: 15px; }
+    .portal-header h1 { font-size: 20px; }
+
+    /* Navigation - Stacking tabs */
+    .tab-navigation-container {
+        gap: 10px;
+        padding-bottom: 12px;
+    }
+    
+    .tab-trigger-btn { 
+        padding: 10px 6px; 
+        font-size: 12px;
+        flex: 1 1 calc(33.333% - 10px);
+        min-width: 100px;
+        max-width: 45%;
+    }
+    .tab-navigation-container {
+        gap: 8px;
+        padding-bottom: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .tab-trigger-btn { 
+        padding: 10px 6px; 
+        font-size: 13px;
+        flex: 1 1 calc(50% - 8px); /* Two buttons per row on mobile */
+        min-width: 120px;
+    }
+
+    .content-card { padding: 15px; }
+    .card-title { font-size: 16px; margin-bottom: 12px; }
+    
+    /* Layouts */
+    .grid-two-column { grid-template-columns: 1fr; gap: 15px; }
+    
+    /* Form Elements */
+    .form-group-element input, 
+    .form-group-element select, 
+    .form-group-element textarea { 
+        padding: 10px; 
+        font-size: 14px; /* Better tap targets on mobile */
+    }
+
+    /* Charts */
+    .charts-flex-wrapper { flex-direction: column; gap: 20px; }
+    .chart-box { padding: 15px; width: 100%; }
+    .pie-canvas-container { width: 150px; height: 150px; margin-bottom: 15px; }
+    
+    /* Tables - Making them scrollable and readable */
+    .table-responsive { 
+        overflow-x: auto; 
+        display: block;
+        width: 100%;
+    }
+    
+    table, .dashboard-table {
+        font-size: 12px;
+    }
+    
+
+    table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+
+    /* 2. Make cells smaller to fit more data on screen */
+    th, td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+ 
+    .hide-on-mobile {
+        display: none;
+    }
+
+    /* Modal Adjustments */
+    .modal-card { width: 90%; padding: 20px; }
+    
+    /* Hide non-essential info if table is too wide */
+    .hide-on-mobile { display: none; }
+}
+
 @keyframes slideIn {
     from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
-
 /*
 
 
