@@ -87,7 +87,7 @@ WSGI_APPLICATION = 'csc_crm.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        env='DATABASE_URL',
+        default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
         ssl_require=True
     )
@@ -160,7 +160,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 587  # Common port for TLS
 EMAIL_HOST_USER = 'dharanigopal45@gmail.com'
-EMAIL_HOST_PASSWORD =env('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True 
 
 # Best Practice: Remove the session setting you added for testing
