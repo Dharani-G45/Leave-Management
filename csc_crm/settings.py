@@ -28,12 +28,17 @@ SECRET_KEY = 'django-insecure-a9e#4j@z2xzg1!ik=s-@xv((on564h#j5hrkaio3)8arb510ml
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# ALLOWED_HOSTS = [
+#     'web-production-72b49.up.railway.app', 
+#     'localhost', 
+#     '127.0.0.1'
+# ]
+
 ALLOWED_HOSTS = [
-    'web-production-72b49.up.railway.app', 
+    'DharaniG.pythonanywhere.com',  # Add your new domain here
     'localhost', 
     '127.0.0.1'
 ]
-
 CSRF_TRUSTED_ORIGINS = [
     'https://web-production-72b49.up.railway.app'
 ]
@@ -176,7 +181,10 @@ SESSION_SAVE_EVERY_REQUEST = False
 DEFAULT_FROM_EMAIL = "CRM Leave Portal <dharanigopal45@gmail.com>"
 
 # Session settings
-#SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-#SESSION_COOKIE_AGE = 1209600  # 2 weeks
-#SESSION_SAVE_EVERY_REQUEST = True # Force session save on every hit to test if it fixes the logout
-#SESSION_COOKIE_HTTPONLY = True
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 1209600  # 2 weeks
+SESSION_SAVE_EVERY_REQUEST = True # Force session save on every hit to test if it fixes the logout
+SESSION_COOKIE_HTTPONLY = True
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
