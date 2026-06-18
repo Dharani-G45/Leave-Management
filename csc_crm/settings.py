@@ -35,7 +35,7 @@ DEBUG = True
 # ]
 
 ALLOWED_HOSTS = [
-    'DharaniG.pythonanywhere.com',  # Add your new domain here
+    'dharanig.pythonanywhere.com',  # Add your new domain here
     'localhost', 
     '127.0.0.1'
 ]
