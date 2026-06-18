@@ -35,10 +35,11 @@ DEBUG = True
 # ]
 
 ALLOWED_HOSTS = [
-    'dharanig.pythonanywhere.com',  # Add your new domain here
-    'localhost', 
-    '127.0.0.1'
+    'dharanig.pythonanywhere.com',
+    'localhost',
+    '127.0.0.1',
 ]
+
 CSRF_TRUSTED_ORIGINS = [
     'https://web-production-72b49.up.railway.app'
 ]
